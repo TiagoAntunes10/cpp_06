@@ -29,7 +29,7 @@ static bool is_pseudo(std::string const input) {
 }
 
 static short real_num(std::string const input) {
-  if (input.find('.') || is_pseudo(input)) {
+  if (input.find('.') != std::string::npos || is_pseudo(input)) {
     if (input[input.length() - 1] == 'f')
       return (2);
     return (1);
@@ -55,34 +55,44 @@ static bool float_limits(double d) {
   return false;
 }
 
-// TODO: Check why double and float do not write ".0" for precision
+static unsigned int count_dec(std::string const input) {
+  int last_pos = input.length() - 1;
+
+  if (input[last_pos] == 'f')
+    return (last_pos - input.find('.') - 1);
+  return (last_pos - input.find('.'));
+}
+
 void ScalarConverter::convert(char *input) {
   char chr;
   int integer;
   float f;
   double d;
   short real_type;
+  unsigned int num_dec = 1;
 
   real_type = real_num(input);
   if (real_type == 1) {
-    d = double(atof(input)) / 1.0;
-    f = float(d) / 1.0;
+    d = double(atof(input));
+    f = float(d);
     integer = int(d);
     chr = (unsigned char)d;
+    num_dec = count_dec(input);
   } else if (real_type == 2) {
-    f = float(atof(input)) / 1.0;
-    d = double(f) / 1.0;
+    f = float(atof(input));
+    d = double(f);
     integer = int(f);
     chr = (unsigned char)f;
+    num_dec = count_dec(input);
   } else if (is_char(input)) {
     chr = (unsigned char)input[0];
-    d = double(chr) / 1.0;
-    f = float(chr) / 1.0;
+    d = (double)chr;
+    f = float(chr);
     integer = int(chr);
   } else {
     integer = int(std::atoi(input));
-    d = double(integer) / 1.0;
-    f = float(integer) / 1.0;
+    d = double(integer);
+    f = float(integer);
     chr = (unsigned char)integer;
   }
 
@@ -103,12 +113,12 @@ void ScalarConverter::convert(char *input) {
       std::cout << integer << std::endl;
   }
 
-  std::cout << "float: ";
+  std::cout << std::fixed << "float: ";
   if (float_limits(d))
     std::cout << "impossible" << std::endl;
   else
-    std::cout << f << "f" << std::endl;
+    std::cout << std::setprecision(num_dec) << f << "f" << std::endl;
 
   std::cout << "double: ";
-  std::cout << d << std::endl;
+  std::cout << std::setprecision(num_dec) << d << std::endl;
 }
