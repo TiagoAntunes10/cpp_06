@@ -6,15 +6,37 @@
 /*   By: tialbert <tialbert@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/22 11:33:11 by tialbert          #+#    #+#             */
-/*   Updated: 2025/07/28 23:09:14 by tialbert         ###   ########.fr       */
+/*   Updated: 2025/08/01 22:58:12 by tialbert         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Include/includes.hpp"
+#include <cctype>
+#include <climits>
 
 static bool is_char(std::string const input) {
   if (input.length() == 1 && !std::isdigit(input[0]))
     return true;
+  return false;
+}
+
+static bool is_invalid(std::string const input) {
+  int count = 0;
+  double d;
+
+  if (input.length() >= 2) {
+    if (input[0] == '+' || input[0] == '-')
+      count++;
+
+    if ((count == 1 && !std::isdigit(input[1])) ||
+        (count == 0 && !std::isdigit(input[0])))
+      return true;
+  }
+
+  d = std::strtod(input.c_str(), 0);
+  if (d > INT_MAX || d < INT_MIN)
+    return true;
+
   return false;
 }
 
@@ -29,9 +51,15 @@ static bool is_pseudo(std::string const input) {
 }
 
 static short real_num(std::string const input) {
+  double d;
+
   if (input.find('.') != std::string::npos || is_pseudo(input)) {
-    if (input[input.length() - 1] == 'f')
+    if (input[input.length() - 1] == 'f') {
+      d = std::strtod(input.c_str(), 0);
+      if (!std::isnan(d) && !std::isinf(d) && (d > FLT_MAX || d < FLT_MIN))
+        return (0);
       return (2);
+    }
     return (1);
   }
   return (0);
@@ -63,6 +91,7 @@ static unsigned int count_dec(std::string const input) {
   return (last_pos - input.find('.'));
 }
 
+// TODO: Handle int max, float max and double max
 void ScalarConverter::convert(char *input) {
   char chr;
   int integer;
@@ -73,27 +102,34 @@ void ScalarConverter::convert(char *input) {
 
   real_type = real_num(input);
   if (real_type == 1) {
-    d = double(atof(input));
-    f = float(d);
+    d = std::strtod(input, 0);
+    f = static_cast<float>(d);
     integer = int(d);
-    chr = (unsigned char)d;
+    chr = static_cast<char>(d);
     num_dec = count_dec(input);
   } else if (real_type == 2) {
-    f = float(atof(input));
-    d = double(f);
+    f = std::strtof(input, 0);
+    d = static_cast<double>(f);
     integer = int(f);
-    chr = (unsigned char)f;
+    chr = static_cast<char>(f);
     num_dec = count_dec(input);
   } else if (is_char(input)) {
-    chr = (unsigned char)input[0];
-    d = (double)chr;
-    f = float(chr);
+    chr = input[0];
+    d = static_cast<double>(chr);
+    f = static_cast<float>(chr);
     integer = int(chr);
+  } else if (is_invalid(input)) {
+    std::cout << "char: impossible" << std::endl;
+    std::cout << "int: impossible" << std::endl;
+    std::cout << "float: impossible" << std::endl;
+    std::cout << "double: impossible" << std::endl;
+
+    return;
   } else {
-    integer = int(std::atoi(input));
-    d = double(integer);
-    f = float(integer);
-    chr = (unsigned char)integer;
+    integer = std::atoi(input);
+    d = static_cast<double>(integer);
+    f = static_cast<float>(integer);
+    chr = static_cast<char>(integer);
   }
 
   if (std::isnan(d) || std::isinf(d))
