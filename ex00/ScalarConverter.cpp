@@ -11,11 +11,15 @@
 /* ************************************************************************** */
 
 #include "Include/includes.hpp"
-#include <cctype>
-#include <climits>
 
 static bool is_char(std::string const input) {
   if (input.length() == 1 && !std::isdigit(input[0]))
+    return true;
+  return false;
+}
+
+static bool int_limits(double d) {
+  if (d > INT_MAX || d < INT_MIN)
     return true;
   return false;
 }
@@ -34,7 +38,7 @@ static bool is_invalid(std::string const input) {
   }
 
   d = std::strtod(input.c_str(), 0);
-  if (d > INT_MAX || d < INT_MIN)
+  if (int_limits(d))
     return true;
 
   return false;
@@ -50,25 +54,27 @@ static bool is_pseudo(std::string const input) {
   return false;
 }
 
+static bool float_limits(double d) {
+  if (!std::isnan(d) && !std::isinf(d) && (d > FLT_MAX || d < -FLT_MAX))
+    return true;
+  return false;
+}
+
 static short real_num(std::string const input) {
   double d;
+  unsigned int last_pos = input.length() - 1;
 
   if (input.find('.') != std::string::npos || is_pseudo(input)) {
-    if (input[input.length() - 1] == 'f') {
+    if (input[last_pos] == 'f') {
       d = std::strtod(input.c_str(), 0);
-      if (!std::isnan(d) && !std::isinf(d) && (d > FLT_MAX || d < FLT_MIN))
+      if (float_limits(d))
         return (0);
       return (2);
-    }
+    } else if (!std::isdigit(input[last_pos]))
+      return (0);
     return (1);
   }
   return (0);
-}
-
-static bool int_limits(double d) {
-  if (d > INT_MAX || d < INT_MIN)
-    return true;
-  return false;
 }
 
 static bool char_limits(int integer) {
@@ -77,21 +83,17 @@ static bool char_limits(int integer) {
   return false;
 }
 
-static bool float_limits(double d) {
-  if (!std::isnan(d) && !std::isinf(d) && (d > FLT_MAX || d < -FLT_MAX))
-    return true;
-  return false;
-}
-
 static unsigned int count_dec(std::string const input) {
   int last_pos = input.length() - 1;
 
-  if (input[last_pos] == 'f')
-    return (last_pos - input.find('.') - 1);
+  if (!std::isdigit(input[last_pos])) {
+    while (!std::isdigit(input[last_pos]))
+      last_pos--;
+    return (last_pos - input.find('.'));
+  }
   return (last_pos - input.find('.'));
 }
 
-// TODO: Handle int max, float max and double max
 void ScalarConverter::convert(char *input) {
   char chr;
   int integer;
@@ -103,21 +105,24 @@ void ScalarConverter::convert(char *input) {
   real_type = real_num(input);
   if (real_type == 1) {
     d = std::strtod(input, 0);
+
     f = static_cast<float>(d);
-    integer = int(d);
+    integer = static_cast<int>(d);
     chr = static_cast<char>(d);
     num_dec = count_dec(input);
   } else if (real_type == 2) {
     f = std::strtof(input, 0);
+
     d = static_cast<double>(f);
-    integer = int(f);
+    integer = static_cast<int>(f);
     chr = static_cast<char>(f);
     num_dec = count_dec(input);
   } else if (is_char(input)) {
     chr = input[0];
+
     d = static_cast<double>(chr);
     f = static_cast<float>(chr);
-    integer = int(chr);
+    integer = static_cast<int>(chr);
   } else if (is_invalid(input)) {
     std::cout << "char: impossible" << std::endl;
     std::cout << "int: impossible" << std::endl;
@@ -127,6 +132,7 @@ void ScalarConverter::convert(char *input) {
     return;
   } else {
     integer = std::atoi(input);
+
     d = static_cast<double>(integer);
     f = static_cast<float>(integer);
     chr = static_cast<char>(integer);
@@ -136,12 +142,14 @@ void ScalarConverter::convert(char *input) {
     std::cout << "char: impossible\nint: impossible" << std::endl;
   else {
     std::cout << "char: ";
+
     if (char_limits(integer))
       std::cout << "impossible" << std::endl;
     else if (isprint(chr))
       std::cout << "'" << chr << "'" << std::endl;
     else
       std::cout << "Non displayable" << std::endl;
+
     std::cout << "int: ";
     if (int_limits(d))
       std::cout << "impossible" << std::endl;
