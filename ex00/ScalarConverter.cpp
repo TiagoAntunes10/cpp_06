@@ -15,30 +15,12 @@
 static bool is_char(std::string const input) {
   if (input.length() == 1 && !std::isdigit(input[0]))
     return true;
+
   return false;
 }
 
 static bool int_limits(double d) {
   if (d > INT_MAX || d < INT_MIN)
-    return true;
-  return false;
-}
-
-static bool is_invalid(std::string const input) {
-  int count = 0;
-  double d;
-
-  if (input.length() >= 2) {
-    if (input[0] == '+' || input[0] == '-')
-      count++;
-
-    if ((count == 1 && !std::isdigit(input[1])) ||
-        (count == 0 && !std::isdigit(input[0])))
-      return true;
-  }
-
-  d = std::strtod(input.c_str(), 0);
-  if (int_limits(d))
     return true;
 
   return false;
@@ -51,12 +33,67 @@ static bool is_pseudo(std::string const input) {
     if (!input.compare(pseudos[i]))
       return true;
   }
+
+  return false;
+}
+
+static bool find_repeated(std::string const input) {
+  std::string chr_to_find = "+-f.";
+  int length = input.length();
+  int count;
+  int count_signs = 0;
+
+  for (int i = 0; i < 4; i++) {
+    count = 0;
+
+    for (int j = 0; j < length; j++) {
+      if (chr_to_find[i] == input[j] && i < 2)
+        count_signs++;
+      else if (chr_to_find[i] == input[j])
+        count++;
+    }
+
+    if (count > 1 || count_signs > 1)
+      return true;
+  }
+
+  return false;
+}
+
+static bool invalid_f(std::string const input) {
+  unsigned long int f_pos = input.find('f');
+  unsigned long int last_digit_pos = input.find_last_of(DIGITS);
+
+  if (f_pos != std::string::npos &&
+      (last_digit_pos == std::string::npos || f_pos < last_digit_pos))
+    return true;
+
+  return false;
+}
+
+static bool is_invalid(std::string const input, int type) {
+  double d;
+
+  if (input.length() >= 2 && !is_pseudo(input)) {
+    if (input.find_first_not_of(VALID_CHR) != std::string::npos ||
+        find_repeated(input) || invalid_f(input))
+      return true;
+  }
+
+  if (type == 0) {
+    d = std::strtod(input.c_str(), 0);
+
+    if (int_limits(d))
+      return true;
+  }
+
   return false;
 }
 
 static bool float_limits(double d) {
   if (!std::isnan(d) && !std::isinf(d) && (d > FLT_MAX || d < -FLT_MAX))
     return true;
+
   return false;
 }
 
@@ -64,16 +101,21 @@ static short real_num(std::string const input) {
   double d;
   unsigned int last_pos = input.length() - 1;
 
-  if (input.find('.') != std::string::npos || is_pseudo(input)) {
+  if (last_pos > 0 &&
+      (input.find('.') != std::string::npos || is_pseudo(input))) {
     if (input[last_pos] == 'f') {
       d = std::strtod(input.c_str(), 0);
+
       if (float_limits(d))
         return (0);
+
       return (2);
-    } else if (!std::isdigit(input[last_pos]))
+    } else if (!is_pseudo(input) && !std::isdigit(input[last_pos]))
       return (0);
+
     return (1);
   }
+
   return (0);
 }
 
@@ -103,6 +145,15 @@ void ScalarConverter::convert(char *input) {
   unsigned int num_dec = 1;
 
   real_type = real_num(input);
+  if (is_invalid(input, real_type)) {
+    std::cout << "char: impossible" << std::endl;
+    std::cout << "int: impossible" << std::endl;
+    std::cout << "float: impossible" << std::endl;
+    std::cout << "double: impossible" << std::endl;
+
+    return;
+  }
+
   if (real_type == 1) {
     d = std::strtod(input, 0);
 
@@ -123,13 +174,6 @@ void ScalarConverter::convert(char *input) {
     d = static_cast<double>(chr);
     f = static_cast<float>(chr);
     integer = static_cast<int>(chr);
-  } else if (is_invalid(input)) {
-    std::cout << "char: impossible" << std::endl;
-    std::cout << "int: impossible" << std::endl;
-    std::cout << "float: impossible" << std::endl;
-    std::cout << "double: impossible" << std::endl;
-
-    return;
   } else {
     integer = std::atoi(input);
 

@@ -22,6 +22,11 @@
 #define CYAN "\033[36m"
 #define WHITE "\033[37m"
 
+#define DIGITS "0123456789"
+#define VALID_CHR "0123456789.f+-"
+#define LOWER_LETTERS "abcdefghijklmnopqrstuvwxyz"
+#define UPPER_LETTERS "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+
 #include "ScalarConverter.hpp"
 #include <cctype>
 #include <cfloat>
