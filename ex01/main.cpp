@@ -14,7 +14,6 @@
 
 int main(void) {
   Data *data = new Data();
-  Serializer s;
   uintptr_t i;
   Data *cpy;
 
@@ -25,8 +24,8 @@ int main(void) {
             << std::endl;
   std::cout << std::endl;
 
-  i = s.serialize(data);
-  cpy = s.deserialize(i);
+  i = Serializer::serialize(data);
+  cpy = Serializer::deserialize(i);
 
   std::cout << GREEN << "After serialization" << END << std::endl;
   std::cout << BLUE << "Pointer: " << END << cpy << std::endl;
