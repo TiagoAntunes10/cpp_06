@@ -18,10 +18,10 @@ Base *generate(void) {
 
   std::srand(time(0));
   random = std::rand() % 100 + 1;
-  if (random % 2 == 0) {
+  if (random % 3 == 0) {
     base = new A();
     std::cout << RED << "Object type A created" << END << std::endl;
-  } else if (random % 3 == 0) {
+  } else if (random % 3 == 1) {
     base = new C();
     std::cout << RED << "Object type C created" << END << std::endl;
   } else {
