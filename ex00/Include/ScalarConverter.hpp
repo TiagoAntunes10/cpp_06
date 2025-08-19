@@ -18,6 +18,9 @@
 class ScalarConverter {
 public:
   static void convert(char *input);
+
+private:
+  ScalarConverter(void) { return; };
 };
 
 #endif
